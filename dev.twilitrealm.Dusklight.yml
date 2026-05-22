@@ -4,6 +4,7 @@ runtime-version: "25.08"
 sdk: org.freedesktop.Sdk
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.llvm22
+  - org.freedesktop.Sdk.Extension.rust-stable
 
 command: dusklight
 
@@ -11,7 +12,8 @@ build-options:
   cflags: "-O2 -ffat-lto-objects -flto=thin -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
   cxxflags: "-O2 -ffat-lto-objects -flto=thin -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
   ldflags: "-flto=thin"
-  prepend-path: /usr/lib/sdk/llvm22/bin
+  rustflags: "-C force-frame-pointers -C lto=thin -C linker-plugin-lto -C opt-level=2 -C codegen-units=16 -C strip=none"
+  prepend-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/llvm22/bin
   env:
     CC: clang
     CXX: clang++
@@ -21,15 +23,29 @@ finish-args:
   # Graphical output
   - --socket=wayland
   - --socket=fallback-x11
+
   # Audio Support
   - --socket=pulseaudio
   - --filesystem=xdg-run/pipewire-0
+
   # GPU Support
   - --device=dri
+
   # Read ISO from downloads
   - --filesystem=xdg-download:ro
+
   # Controller Support
-  - --device=input
+  #- --device=input #Gyro not working
+  - --device=all
+  # Filesystem: Udev information (read‑only, for inputs)
+  - --filesystem=/run/udev:ro
+
+  # D-Bus: Share IPC namespace for inter-process communication
+  - --share=ipc
+
+  # Discord integration
+  - --filesystem=xdg-run/discord-ipc-0
+  - --filesystem=xdg-run/app/com.discordapp.Discord:create
 
 modules:
   - name: cxxopts
@@ -79,8 +95,6 @@ modules:
     buildsystem: simple
     build-commands:
       - pip3 install --verbose --exists-action=i --no-index --find-links="file://${PWD}" --prefix=${FLATPAK_DEST} "jinja2" --no-build-isolation
-    cleanup:
-      - /lib/python*
     sources:
       - type: file
         url: https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl
@@ -88,6 +102,8 @@ modules:
       - type: file
         url: https://files.pythonhosted.org/packages/7e/99/7690b6d4034fffd95959cbe0c02de8deb3098cc577c67bb6a24fe5d7caa7/markupsafe-3.0.3.tar.gz
         sha256: 722695808f4b6457b320fdc131280796bdceb04ab50fe1795cd540799ebe1698
+    cleanup:
+      - /lib/python*
 
   - name: xxHash
     buildsystem: cmake-ninja
@@ -138,13 +154,12 @@ modules:
       # Various SDL features that we want to ensure are enabled
       - -D SDL_HIDAPI=ON
       - -D SDL_HIDAPI_LIBUSB=ON
-      - -D SDL_KMSDRM=ON
       - -D SDL_LIBUDEV=ON
       - -D SDL_PIPEWIRE=ON
       - -D SDL_PULSEAUDIO=ON
       - -D SDL_RENDER_GPU=ON
       - -D SDL_RENDER_VULKAN=ON
-      - -D SDL_X11=ON
+      - -D SDL_X11=ON # Set this to OFF for a wayland-only build
       - -D SDL_WAYLAND=ON
       - -D SDL_VULKAN=ON
 
@@ -154,16 +169,15 @@ modules:
       - -D SDL_DUMMYAUDIO=OFF
       - -D SDL_DUMMYVIDEO=OFF
       - -D SDL_JACK=OFF
+      - -D SDL_KMSDRM=OFF
       - -D SDL_OFFSCREEN=OFF
-      # Dusklight doesn't support these APIs but they are required to build DRM support
-      # - -D SDL_OPENGL=OFF
-      # - -D SDL_OPENGLES=OFF
+      - -D SDL_OPENGL=OFF
+      - -D SDL_OPENGLES=OFF
       - -D SDL_OSS=OFF
       - -D SDL_SNDIO=OFF
 
       # SDL uses dlopen() extensively to load various system libraries. For the feature support we must have we can disable that so that they are linked normally and some potential issues can be surfaced at compile-time
       - -D SDL_HIDAPI_LIBUSB_SHARED=OFF
-      - -D SDL_KMSDRM_SHARED=OFF
       - -D SDL_PIPEWIRE_SHARED=OFF
       - -D SDL_PULSEAUDIO_SHARED=OFF
       - -D SDL_WAYLAND_SHARED=OFF
@@ -201,7 +215,7 @@ modules:
 
       # Build support explicitly for both X11 and Wayland
       - -D DAWN_USE_WAYLAND=ON
-      - -D DAWN_USE_X11=ON
+      - -D DAWN_USE_X11=ON # Set this to OFF for a wayland-only build
 
     sources:
       - type: git
@@ -243,6 +257,32 @@ modules:
       - /lib/lib*.a
       - /lib/cmake
 
+  - name: libnod
+    buildsystem: cmake-ninja
+    config-opts:
+      - -D BUILD_SHARED_LIBS=OFF
+      - -D FETCHCONTENT_FULLY_DISCONNECTED=ON
+      - -D FETCHCONTENT_SOURCE_DIR_CORROSION=deps/corrosion
+
+      # This doesn't currently work. Nod doesn't appear to add the system deps to the linker properties so the build fails when linking dusklight
+      # - -D NOD_USE_CMAKE_COMPRESSION=ON
+    sources:
+      - type: archive
+        url: https://github.com/encounter/nod/archive/refs/tags/v2.0.0-alpha.8.tar.gz
+        sha256: c266e80b53e7d9c64737a1ce45ca9782cae115838348e3a8be0e26e61ccc7210
+      - type: archive
+        url: https://github.com/ReillyBrogan/nod/releases/download/v2.0.0-alpha.14/vendored-crates-v2.0.0-alpha.14.tar.zst
+        sha256: cc8c57fdfcd383d2148544dd11939e56ed1a96ba08a81bacdee374b834f4f7e2
+        strip-components: 0
+      - type: archive
+        url: https://github.com/corrosion-rs/corrosion/archive/refs/tags/v0.5.0.tar.gz
+        sha256: bbe0d4a31cef91b890134af82789fb6e8ecc33270472beea9cecb8f2b7b7ed65
+        dest: deps/corrosion
+    cleanup:
+      - /include
+      - /lib/lib*.a
+      - /lib/cmake
+
   - name: dev.twilitrealm.Dusklight
     buildsystem: cmake-ninja
     config-opts:
@@ -254,10 +294,9 @@ modules:
 
       # Various settings to get the build to happen offline
       - -D AURORA_DAWN_PROVIDER=system
-      - -D AURORA_NOD_PROVIDER=package
+      - -D AURORA_NOD_PROVIDER=system
       - -D FETCHCONTENT_FULLY_DISCONNECTED=ON
       - -D FETCHCONTENT_SOURCE_DIR_IMGUI=imgui.tar.gz
-      - -D FETCHCONTENT_SOURCE_DIR_NOD_PREBUILT=libnod.tar.gz
       - -D FETCHCONTENT_SOURCE_DIR_RMLUI=rmlui.tar.gz
       - -D FETCHCONTENT_SOURCE_DIR_TRACY=tracy.tar.gz
       - -D SDL3_DIR=/app
@@ -296,10 +335,6 @@ modules:
         url: https://github.com/wolfpld/tracy/archive/a64b9a20294d59421a2f57aeca3c6383d8c48169.tar.gz
         sha256: 24d342b5127d7f659dc3cf94f24347b348cc736f25b17a691fd7f69541937658
         dest: tracy.tar.gz
-      - type: archive
-        url: https://github.com/encounter/nod/releases/download/v2.0.0-alpha.8/libnod-linux-x86_64.tar.gz
-        sha256: d9812d435600333a13bfacd9043d027e308fc29ba0bd65801858fe35ee77e584
-        dest: libnod.tar.gz
 
     post-install:
       # Correct the binary path
