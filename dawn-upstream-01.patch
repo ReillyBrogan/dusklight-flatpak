@@ -1,0 +1,28 @@
+From 7fd466253b15deb117b23b8b68f6e7d1d897cc4d Mon Sep 17 00:00:00 2001
+From: Corentin Wallez <cwallez@chromium.org>
+Date: Wed, 13 May 2026 09:46:51 -0700
+Subject: [PATCH] [dawn][vk] Check for correct extension for Wayland surfaces.
+
+Fixed: 512509740
+Change-Id: I449b24fe6630bcaea50230d3c89726f63924badd
+Reviewed-on: https://dawn-review.googlesource.com/c/dawn/+/308396
+Auto-Submit: Corentin Wallez <cwallez@chromium.org>
+Reviewed-by: Brandon Jones <bajones@chromium.org>
+Commit-Queue: Brandon Jones <bajones@chromium.org>
+---
+ src/dawn/native/vulkan/SwapChainVk.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/dawn/native/vulkan/SwapChainVk.cpp b/src/dawn/native/vulkan/SwapChainVk.cpp
+index f2294e2a5ef..ba898f574a8 100644
+--- a/src/dawn/native/vulkan/SwapChainVk.cpp
++++ b/src/dawn/native/vulkan/SwapChainVk.cpp
+@@ -667,7 +667,7 @@ ResultOrError<VkSurfaceKHR> CreateVulkanSurface(InstanceBase* instance,
+ 
+ #if defined(DAWN_USE_WAYLAND)
+         case Surface::Type::WaylandSurface: {
+-            if (info.HasExt(InstanceExt::XlibSurface)) {
++            if (info.HasExt(InstanceExt::WaylandSurface)) {
+                 VkWaylandSurfaceCreateInfoKHR createInfo;
+                 createInfo.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
+                 createInfo.pNext = nullptr;

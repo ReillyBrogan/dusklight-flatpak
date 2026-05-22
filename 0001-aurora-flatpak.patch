@@ -1,0 +1,78 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Reilly Brogan <reilly@reillybrogan.com>
+Date: Thu, 21 May 2026 18:46:18 -0500
+Subject: [PATCH] aurora-flatpak
+
+---
+ cmake/aurora_core.cmake |  4 ++--
+ extern/CMakeLists.txt   | 15 +++++++++++----
+ 2 files changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/cmake/aurora_core.cmake b/cmake/aurora_core.cmake
+index 70c8ea9..5b83beb 100644
+--- a/cmake/aurora_core.cmake
++++ b/cmake/aurora_core.cmake
+@@ -8,14 +8,14 @@ add_library(aurora_core STATIC
+ )
+ add_library(aurora::core ALIAS aurora_core)
+ set_target_properties(aurora_core PROPERTIES FOLDER "aurora")
+-
++find_package(fmt 11.0 CONFIG)
+ target_compile_definitions(aurora_core PUBLIC AURORA TARGET_PC)
+ target_include_directories(aurora_core PUBLIC include)
+ target_link_libraries(aurora_core PUBLIC fmt::fmt ${AURORA_SDL3_TARGET} xxhash)
+ target_link_libraries(aurora_core PRIVATE absl::btree absl::flat_hash_map sqlite3 TracyClient)
+ if (AURORA_ENABLE_GX AND AURORA_CACHE_USE_ZSTD)
+     target_compile_definitions(aurora_core PRIVATE AURORA_CACHE_USE_ZSTD)
+-    target_link_libraries(aurora_core PRIVATE libzstd_static)
++    target_link_libraries(aurora_core PRIVATE zstd)
+ endif ()
+ 
+ if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+diff --git a/extern/CMakeLists.txt b/extern/CMakeLists.txt
+index dee0b72..baed57d 100644
+--- a/extern/CMakeLists.txt
++++ b/extern/CMakeLists.txt
+@@ -49,7 +49,9 @@ endif ()
+ 
+ include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/AuroraSDL3Provider.cmake)
+ 
+-if (NOT TARGET xxhash)
++find_package(xxHash 0.7 CONFIG)
++
++if (NOT TARGET xxHash::xxhash)
+   message(STATUS "aurora: Fetching xxhash")
+   FetchContent_Declare(xxhash
+     URL https://github.com/Cyan4973/xxHash/archive/refs/tags/v0.8.3.tar.gz
+@@ -73,7 +75,9 @@ else ()
+   message(STATUS "aurora: Using existing xxhash")
+ endif ()
+ 
+-if (NOT TARGET fmt)
++find_package(fmt 11.0 CONFIG)
++
++if (NOT TARGET fmt::fmt)
+   message(STATUS "aurora: Fetching fmt")
+   FetchContent_Declare(fmt
+     URL https://github.com/fmtlib/fmt/archive/refs/tags/11.1.4.tar.gz
+@@ -213,7 +217,9 @@ if (AURORA_ENABLE_GX)
+     target_link_libraries(imgui PRIVATE ${AURORA_SDL3_TARGET})
+   endif ()
+ 
+-  if (NOT TARGET sqlite3)
++  find_package(SQLite3)
++
++  if (NOT TARGET SQLite3::SQLite3)
+     message(STATUS "aurora: Fetching sqlite3")
+     FetchContent_Declare(sqlite3
+       URL https://sqlite.org/2026/sqlite-amalgamation-3510300.zip
+@@ -230,7 +236,8 @@ if (AURORA_ENABLE_GX)
+   endif ()
+ 
+   if (AURORA_CACHE_USE_ZSTD)
+-    if (NOT TARGET libzstd_static)
++    find_package(zstd)
++    if (NOT TARGET zstd:libzstd_static)
+       message(STATUS "aurora: Fetching zstd")
+       set(ZSTD_BUILD_STATIC ON)
+       set(ZSTD_BUILD_SHARED OFF)
