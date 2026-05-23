@@ -12,6 +12,7 @@ build-options:
   cflags: "-O2 -ffat-lto-objects -flto=thin -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
   cxxflags: "-O2 -ffat-lto-objects -flto=thin -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
   ldflags: "-flto=thin"
+  # Note that rustflags isn't supported until flatpak-builder 1.5 which hasn't been released yet. Expect a warning about that during the build
   rustflags: "-C force-frame-pointers -C lto=thin -C linker-plugin-lto -C opt-level=2 -C codegen-units=16 -C strip=none"
   prepend-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/llvm22/bin
   env:
