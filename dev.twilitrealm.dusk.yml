@@ -49,243 +49,6 @@ finish-args:
   - --filesystem=xdg-run/app/com.discordapp.Discord:create
 
 modules:
-  - name: cxxopts
-    buildsystem: cmake-ninja
-    config-opts:
-      - -D CXXOPTS_BUILD_EXAMPLES=OFF
-      - -D CXXOPTS_BUILD_TESTS=OFF
-    sources:
-      - type: archive
-        url: https://github.com/jarro2783/cxxopts/archive/refs/tags/v3.3.1.tar.gz
-        sha256: 3bfc70542c521d4b55a46429d808178916a579b28d048bd8c727ee76c39e2072
-    cleanup:
-      - /include
-      - /lib/cmake
-      - /lib/pkgconfig
-
-  - name: fmt
-    buildsystem: cmake-ninja
-    sources:
-      - type: archive
-        url: https://github.com/fmtlib/fmt/archive/refs/tags/11.2.0.tar.gz
-        sha256: bc23066d87ab3168f27cef3e97d545fa63314f5c79df5ea444d41d56f962c6af
-    cleanup:
-      - /include
-      - /lib/lib*.a
-      - /lib/cmake
-      - /lib/pkgconfig
-
-  - name: nlohmann_json
-    buildsystem: cmake-ninja
-    config-opts:
-      - -D BUILD_TESTING=OFF
-      - -D JSON_BuildTests=OFF
-    sources:
-      - type: archive
-        url: https://github.com/nlohmann/json/archive/refs/tags/v3.12.0.tar.gz
-        sha256: 4b92eb0c06d10683f7447ce9406cb97cd4b453be18d7279320f7b2f025c10187
-    cleanup:
-      - /include
-      - /share/cmake
-      - /share/pkgconfig
-
-  # https://docs.flatpak.org/en/latest/python.html
-  # `./flatpak-pip-generator --runtime='org.freedesktop.Sdk//25.08' jinja2`
-  # and then converted to yaml and inserted here
-  - name: python3-jinja2
-    buildsystem: simple
-    build-commands:
-      - pip3 install --verbose --exists-action=i --no-index --find-links="file://${PWD}" --prefix=${FLATPAK_DEST} "jinja2" --no-build-isolation
-    sources:
-      - type: file
-        url: https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl
-        sha256: 85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67
-      - type: file
-        url: https://files.pythonhosted.org/packages/7e/99/7690b6d4034fffd95959cbe0c02de8deb3098cc577c67bb6a24fe5d7caa7/markupsafe-3.0.3.tar.gz
-        sha256: 722695808f4b6457b320fdc131280796bdceb04ab50fe1795cd540799ebe1698
-    cleanup:
-      - /lib/python*
-
-  - name: xxHash
-    buildsystem: cmake-ninja
-    subdir: cmake_unofficial
-    config-opts:
-      - -D BUILD_SHARED_LIBS=OFF
-      - -D XXHASH_BUILD_XXHSUM=OFF
-    sources:
-      - type: archive
-        url: https://github.com/Cyan4973/xxHash/archive/refs/tags/v0.8.3.tar.gz
-        sha256: aae608dfe8213dfd05d909a57718ef82f30722c392344583d3f39050c7f29a80
-    cleanup:
-      - /include
-      - /lib/lib*.a
-      - /lib/cmake
-      - /lib/pkgconfig
-
-  - name: zstd
-    buildsystem: cmake-ninja
-    subdir: build/cmake
-    config-opts:
-      - -D ZSTD_BUILD_CONTRIB=OFF
-      - -D ZSTD_BUILD_PROGRAMS=OFF
-      - -D ZSTD_BUILD_SHARED=OFF
-      - -D ZSTD_BUILD_STATIC=ON
-      - -D ZSTD_BUILD_TESTS=OFF
-      - -D ZSTD_LEGACY_SUPPORT=OFF
-    sources:
-      - type: archive
-        url: https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz
-        sha256: eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3
-    cleanup:
-      - /include
-      - /lib/lib*.a
-      - /lib/cmake
-      - /lib/pkgconfig
-
-  - name: SDL3
-    buildsystem: cmake-ninja
-    config-opts:
-      - -D SDL_CAMERA=OFF
-      - -D SDL_EXAMPLES=OFF
-      - -D SDL_SHARED=OFF
-      - -D SDL_STATIC=ON
-      - -D SDL_TESTS=OFF
-      - -D SDL_TEST_LIBRARY=OFF
-
-      # Various SDL features that we want to ensure are enabled
-      - -D SDL_HIDAPI=ON
-      - -D SDL_HIDAPI_LIBUSB=ON
-      - -D SDL_LIBUDEV=ON
-      - -D SDL_PIPEWIRE=ON
-      - -D SDL_PULSEAUDIO=ON
-      - -D SDL_RENDER_GPU=ON
-      - -D SDL_RENDER_VULKAN=ON
-      - -D SDL_X11=ON # Set this to OFF for a wayland-only build
-      - -D SDL_WAYLAND=ON
-      - -D SDL_WAYLAND_LIBDECOR=ON
-      - -D SDL_VULKAN=ON
-
-      # And shrink the binary size by disabling everything we don't need or don't want to support
-      - -D SDL_ALSA=OFF
-      - -D SDL_DISKAUDIO=OFF
-      - -D SDL_DUMMYAUDIO=OFF
-      - -D SDL_DUMMYVIDEO=OFF
-      - -D SDL_JACK=OFF
-      - -D SDL_KMSDRM=OFF
-      - -D SDL_OFFSCREEN=OFF
-      - -D SDL_OPENGL=OFF
-      - -D SDL_OPENGLES=OFF
-      - -D SDL_OSS=OFF
-      - -D SDL_SNDIO=OFF
-
-      # SDL uses dlopen() extensively to load various system libraries. For the feature support we must have we can disable that so that they are linked normally and some potential issues can be surfaced at compile-time
-      - -D SDL_HIDAPI_LIBUSB_SHARED=OFF
-      - -D SDL_PIPEWIRE_SHARED=OFF
-      - -D SDL_PULSEAUDIO_SHARED=OFF
-      - -D SDL_WAYLAND_SHARED=OFF
-      - -D SDL_WAYLAND_LIBDECOR_SHARED=OFF
-    sources:
-      - type: archive
-        url: https://libsdl.org/release/SDL3-3.4.8.tar.gz
-        sha256: e9fff7467fb60f037e6708da18b25560649e4c63edc2a69bb871b960d9cbfbba
-    cleanup:
-      - /include/SDL3
-      - /lib/lib*.a
-      - /lib/cmake
-      - /lib/pkgconfig
-
-  - name: Dawn
-    buildsystem: cmake-ninja
-    config-opts:
-      - -D DAWN_BUILD_MONOLITHIC_LIBRARY=STATIC
-      - -D DAWN_ENABLE_INSTALL=ON
-
-      # Dawn/tint components we don't need
-      - -D DAWN_BUILD_BENCHMARKS=OFF
-      - -D DAWN_BUILD_PROTOBUF=OFF
-      - -D DAWN_BUILD_SAMPLES=OFF
-      - -D TINT_BUILD_CMD_TOOLS=OFF
-      - -D TINT_BUILD_IR_BINARY=OFF
-      - -D TINT_BUILD_TESTS=OFF
-
-      # Disable all windowing/graphics support except for Vulkan
-      - -D DAWN_ENABLE_DESKTOP_GL=OFF
-      - -D DAWN_ENABLE_NULL=OFF
-      - -D DAWN_ENABLE_OPENGLES=OFF
-      - -D DAWN_ENABLE_VULKAN=ON
-      - -D DAWN_SUPPORTS_GLFW_FOR_WINDOWING=OFF
-      - -D DAWN_USE_GLFW=OFF
-
-      # Build support explicitly for both X11 and Wayland
-      - -D DAWN_USE_WAYLAND=ON
-      - -D DAWN_USE_X11=ON # Set this to OFF for a wayland-only build
-
-    sources:
-      - type: git
-        url: https://dawn.googlesource.com/dawn
-        # tag: chromium/7850
-        commit: b975919dfb45406ca17162e4d44c74a650caa679
-        disable-submodules: true
-      - type: patch
-        path: dawn-upstream-01.patch
-
-    # Submodules
-      - type: git
-        url: https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp
-        dest: "third_party/abseil-cpp"
-        commit: dd4432fb02583b7a5b2b4fbf2012f7053e286ce0
-        disable-submodules: true
-      - type: git
-        url: https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Headers
-        dest: "third_party/spirv-headers/src"
-        commit: ad9184e76a66b1001c29db9b0a3e87f646c64de0
-        disable-submodules: true
-      - type: git
-        url: https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Tools
-        dest: "third_party/spirv-tools/src"
-        commit: ff5c50339cc1e9f34f04cb440a3e5fe89db0161d
-        disable-submodules: true
-      - type: git
-        url: https://chromium.googlesource.com/external/github.com/KhronosGroup/Vulkan-Headers
-        dest: "third_party/vulkan-headers/src"
-        commit: f6a6f7ab165cedbfa2a7d0c93fe27a2d01ce09c8
-        disable-submodules: true
-      - type: git
-        url: https://chromium.googlesource.com/external/github.com/KhronosGroup/Vulkan-Utility-Libraries
-        dest: "third_party/vulkan-utility-libraries/src"
-        commit: e2f236b273bfcd9c665306fdd53451b923d659ab
-        disable-submodules: true
-    cleanup:
-      - /include
-      - /lib/lib*.a
-      - /lib/cmake
-
-  - name: libnod
-    buildsystem: cmake-ninja
-    config-opts:
-      - -D BUILD_SHARED_LIBS=OFF
-      - -D FETCHCONTENT_FULLY_DISCONNECTED=ON
-      - -D FETCHCONTENT_SOURCE_DIR_CORROSION=deps/corrosion
-
-      # This doesn't currently work. Nod doesn't appear to add the system deps to the linker properties so the build fails when linking dusklight
-      # - -D NOD_USE_CMAKE_COMPRESSION=ON
-    sources:
-      - type: archive
-        url: https://github.com/encounter/nod/archive/refs/tags/v2.0.0-alpha.8.tar.gz
-        sha256: c266e80b53e7d9c64737a1ce45ca9782cae115838348e3a8be0e26e61ccc7210
-      - type: archive
-        url: https://github.com/ReillyBrogan/nod/releases/download/v2.0.0-alpha.14/vendored-crates-v2.0.0-alpha.14.tar.zst
-        sha256: cc8c57fdfcd383d2148544dd11939e56ed1a96ba08a81bacdee374b834f4f7e2
-        strip-components: 0
-      - type: archive
-        url: https://github.com/corrosion-rs/corrosion/archive/refs/tags/v0.6.1.tar.gz
-        sha256: e9e95b1ee2bad52681f347993fb1a5af5cce458c5ce8a2636c9e476e4babf8e3
-        dest: deps/corrosion
-    cleanup:
-      - /include
-      - /lib/lib*.a
-      - /lib/cmake
-
   - name: dev.twilitrealm.dusk
     buildsystem: cmake-ninja
     config-opts:
@@ -360,3 +123,240 @@ modules:
       - install -Dm644 platforms/freedesktop/512x512/apps/dusklight.png /app/share/icons/hicolor/512x512/apps/dev.twilitrealm.dusk.png
       # Install metainfo
       ##- install -Dm644 dev.twilitrealm.dusk.metainfo.xml /app/share/metainfo/dev.twilitrealm.dusk.metainfo.xml
+    modules:
+    - name: cxxopts
+      buildsystem: cmake-ninja
+      config-opts:
+        - -D CXXOPTS_BUILD_EXAMPLES=OFF
+        - -D CXXOPTS_BUILD_TESTS=OFF
+      sources:
+        - type: archive
+          url: https://github.com/jarro2783/cxxopts/archive/refs/tags/v3.3.1.tar.gz
+          sha256: 3bfc70542c521d4b55a46429d808178916a579b28d048bd8c727ee76c39e2072
+      cleanup:
+        - /include
+        - /lib/cmake
+        - /lib/pkgconfig
+
+    - name: fmt
+      buildsystem: cmake-ninja
+      sources:
+        - type: archive
+          url: https://github.com/fmtlib/fmt/archive/refs/tags/11.2.0.tar.gz
+          sha256: bc23066d87ab3168f27cef3e97d545fa63314f5c79df5ea444d41d56f962c6af
+      cleanup:
+        - /include
+        - /lib/lib*.a
+        - /lib/cmake
+        - /lib/pkgconfig
+
+    - name: nlohmann_json
+      buildsystem: cmake-ninja
+      config-opts:
+        - -D BUILD_TESTING=OFF
+        - -D JSON_BuildTests=OFF
+      sources:
+        - type: archive
+          url: https://github.com/nlohmann/json/archive/refs/tags/v3.12.0.tar.gz
+          sha256: 4b92eb0c06d10683f7447ce9406cb97cd4b453be18d7279320f7b2f025c10187
+      cleanup:
+        - /include
+        - /share/cmake
+        - /share/pkgconfig
+
+    - name: xxHash
+      buildsystem: cmake-ninja
+      subdir: cmake_unofficial
+      config-opts:
+        - -D BUILD_SHARED_LIBS=OFF
+        - -D XXHASH_BUILD_XXHSUM=OFF
+      sources:
+        - type: archive
+          url: https://github.com/Cyan4973/xxHash/archive/refs/tags/v0.8.3.tar.gz
+          sha256: aae608dfe8213dfd05d909a57718ef82f30722c392344583d3f39050c7f29a80
+      cleanup:
+        - /include
+        - /lib/lib*.a
+        - /lib/cmake
+        - /lib/pkgconfig
+
+    - name: zstd
+      buildsystem: cmake-ninja
+      subdir: build/cmake
+      config-opts:
+        - -D ZSTD_BUILD_CONTRIB=OFF
+        - -D ZSTD_BUILD_PROGRAMS=OFF
+        - -D ZSTD_BUILD_SHARED=OFF
+        - -D ZSTD_BUILD_STATIC=ON
+        - -D ZSTD_BUILD_TESTS=OFF
+        - -D ZSTD_LEGACY_SUPPORT=OFF
+      sources:
+        - type: archive
+          url: https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz
+          sha256: eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3
+      cleanup:
+        - /include
+        - /lib/lib*.a
+        - /lib/cmake
+        - /lib/pkgconfig
+
+    - name: SDL3
+      buildsystem: cmake-ninja
+      config-opts:
+        - -D SDL_CAMERA=OFF
+        - -D SDL_EXAMPLES=OFF
+        - -D SDL_SHARED=OFF
+        - -D SDL_STATIC=ON
+        - -D SDL_TESTS=OFF
+        - -D SDL_TEST_LIBRARY=OFF
+
+        # Various SDL features that we want to ensure are enabled
+        - -D SDL_HIDAPI=ON
+        - -D SDL_HIDAPI_LIBUSB=ON
+        - -D SDL_LIBUDEV=ON
+        - -D SDL_PIPEWIRE=ON
+        - -D SDL_PULSEAUDIO=ON
+        - -D SDL_RENDER_GPU=ON
+        - -D SDL_RENDER_VULKAN=ON
+        - -D SDL_X11=ON # Set this to OFF for a wayland-only build
+        - -D SDL_WAYLAND=ON
+        - -D SDL_WAYLAND_LIBDECOR=ON
+        - -D SDL_VULKAN=ON
+
+        # And shrink the binary size by disabling everything we don't need or don't want to support
+        - -D SDL_ALSA=OFF
+        - -D SDL_DISKAUDIO=OFF
+        - -D SDL_DUMMYAUDIO=OFF
+        - -D SDL_DUMMYVIDEO=OFF
+        - -D SDL_JACK=OFF
+        - -D SDL_KMSDRM=OFF
+        - -D SDL_OFFSCREEN=OFF
+        - -D SDL_OPENGL=OFF
+        - -D SDL_OPENGLES=OFF
+        - -D SDL_OSS=OFF
+        - -D SDL_SNDIO=OFF
+
+        # SDL uses dlopen() extensively to load various system libraries. For the feature support we must have we can disable that so that they are linked normally and some potential issues can be surfaced at compile-time
+        - -D SDL_HIDAPI_LIBUSB_SHARED=OFF
+        - -D SDL_PIPEWIRE_SHARED=OFF
+        - -D SDL_PULSEAUDIO_SHARED=OFF
+        - -D SDL_WAYLAND_SHARED=OFF
+        - -D SDL_WAYLAND_LIBDECOR_SHARED=OFF
+      sources:
+        - type: archive
+          url: https://libsdl.org/release/SDL3-3.4.8.tar.gz
+          sha256: e9fff7467fb60f037e6708da18b25560649e4c63edc2a69bb871b960d9cbfbba
+      cleanup:
+        - /include/SDL3
+        - /lib/lib*.a
+        - /lib/cmake
+        - /lib/pkgconfig
+
+    - name: Dawn
+      buildsystem: cmake-ninja
+      config-opts:
+        - -D DAWN_BUILD_MONOLITHIC_LIBRARY=STATIC
+        - -D DAWN_ENABLE_INSTALL=ON
+
+        # Dawn/tint components we don't need
+        - -D DAWN_BUILD_BENCHMARKS=OFF
+        - -D DAWN_BUILD_PROTOBUF=OFF
+        - -D DAWN_BUILD_SAMPLES=OFF
+        - -D TINT_BUILD_CMD_TOOLS=OFF
+        - -D TINT_BUILD_IR_BINARY=OFF
+        - -D TINT_BUILD_TESTS=OFF
+
+        # Disable all windowing/graphics support except for Vulkan
+        - -D DAWN_ENABLE_DESKTOP_GL=OFF
+        - -D DAWN_ENABLE_NULL=OFF
+        - -D DAWN_ENABLE_OPENGLES=OFF
+        - -D DAWN_ENABLE_VULKAN=ON
+        - -D DAWN_SUPPORTS_GLFW_FOR_WINDOWING=OFF
+        - -D DAWN_USE_GLFW=OFF
+
+        # Build support explicitly for both X11 and Wayland
+        - -D DAWN_USE_WAYLAND=ON
+        - -D DAWN_USE_X11=ON # Set this to OFF for a wayland-only build
+
+      sources:
+        - type: git
+          url: https://dawn.googlesource.com/dawn
+          # tag: chromium/7850
+          commit: b975919dfb45406ca17162e4d44c74a650caa679
+          disable-submodules: true
+        - type: patch
+          path: dawn-upstream-01.patch
+
+      # Submodules
+        - type: git
+          url: https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp
+          dest: "third_party/abseil-cpp"
+          commit: dd4432fb02583b7a5b2b4fbf2012f7053e286ce0
+          disable-submodules: true
+        - type: git
+          url: https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Headers
+          dest: "third_party/spirv-headers/src"
+          commit: ad9184e76a66b1001c29db9b0a3e87f646c64de0
+          disable-submodules: true
+        - type: git
+          url: https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Tools
+          dest: "third_party/spirv-tools/src"
+          commit: ff5c50339cc1e9f34f04cb440a3e5fe89db0161d
+          disable-submodules: true
+        - type: git
+          url: https://chromium.googlesource.com/external/github.com/KhronosGroup/Vulkan-Headers
+          dest: "third_party/vulkan-headers/src"
+          commit: f6a6f7ab165cedbfa2a7d0c93fe27a2d01ce09c8
+          disable-submodules: true
+        - type: git
+          url: https://chromium.googlesource.com/external/github.com/KhronosGroup/Vulkan-Utility-Libraries
+          dest: "third_party/vulkan-utility-libraries/src"
+          commit: e2f236b273bfcd9c665306fdd53451b923d659ab
+          disable-submodules: true
+      cleanup:
+        - /include
+        - /lib/lib*.a
+        - /lib/cmake
+      modules:
+      # https://docs.flatpak.org/en/latest/python.html
+      # `./flatpak-pip-generator --runtime='org.freedesktop.Sdk//25.08' jinja2`
+      # and then converted to yaml and inserted here
+      - name: python3-jinja2
+        buildsystem: simple
+        build-commands:
+          - pip3 install --verbose --exists-action=i --no-index --find-links="file://${PWD}" --prefix=${FLATPAK_DEST} "jinja2" --no-build-isolation
+        sources:
+          - type: file
+            url: https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl
+            sha256: 85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67
+          - type: file
+            url: https://files.pythonhosted.org/packages/7e/99/7690b6d4034fffd95959cbe0c02de8deb3098cc577c67bb6a24fe5d7caa7/markupsafe-3.0.3.tar.gz
+            sha256: 722695808f4b6457b320fdc131280796bdceb04ab50fe1795cd540799ebe1698
+        cleanup:
+          - /lib/python*
+
+    - name: libnod
+      buildsystem: cmake-ninja
+      config-opts:
+        - -D BUILD_SHARED_LIBS=OFF
+        - -D FETCHCONTENT_FULLY_DISCONNECTED=ON
+        - -D FETCHCONTENT_SOURCE_DIR_CORROSION=deps/corrosion
+
+        # This doesn't currently work. Nod doesn't appear to add the system deps to the linker properties so the build fails when linking dusklight
+        # - -D NOD_USE_CMAKE_COMPRESSION=ON
+      sources:
+        - type: archive
+          url: https://github.com/encounter/nod/archive/refs/tags/v2.0.0-alpha.8.tar.gz
+          sha256: c266e80b53e7d9c64737a1ce45ca9782cae115838348e3a8be0e26e61ccc7210
+        - type: archive
+          url: https://github.com/ReillyBrogan/nod/releases/download/v2.0.0-alpha.14/vendored-crates-v2.0.0-alpha.14.tar.zst
+          sha256: cc8c57fdfcd383d2148544dd11939e56ed1a96ba08a81bacdee374b834f4f7e2
+          strip-components: 0
+        - type: archive
+          url: https://github.com/corrosion-rs/corrosion/archive/refs/tags/v0.6.1.tar.gz
+          sha256: e9e95b1ee2bad52681f347993fb1a5af5cce458c5ce8a2636c9e476e4babf8e3
+          dest: deps/corrosion
+      cleanup:
+        - /include
+        - /lib/lib*.a
+        - /lib/cmake
