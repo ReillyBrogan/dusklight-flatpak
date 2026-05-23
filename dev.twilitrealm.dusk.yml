@@ -1,4 +1,4 @@
-app-id: dev.twilitrealm.Dusklight
+app-id: dev.twilitrealm.dusk
 runtime: org.freedesktop.Platform
 runtime-version: "25.08"
 sdk: org.freedesktop.Sdk
@@ -154,6 +154,7 @@ modules:
       # Various SDL features that we want to ensure are enabled
       - -D SDL_HIDAPI=ON
       - -D SDL_HIDAPI_LIBUSB=ON
+      - -D SDL_LIBDECOR=ON
       - -D SDL_LIBUDEV=ON
       - -D SDL_PIPEWIRE=ON
       - -D SDL_PULSEAUDIO=ON
@@ -163,7 +164,7 @@ modules:
       - -D SDL_WAYLAND=ON
       - -D SDL_VULKAN=ON
 
-      # And a few we can live without
+      # And shrink the binary size by disabling everything we don't need or don't want to support
       - -D SDL_ALSA=OFF
       - -D SDL_DISKAUDIO=OFF
       - -D SDL_DUMMYAUDIO=OFF
@@ -178,6 +179,7 @@ modules:
 
       # SDL uses dlopen() extensively to load various system libraries. For the feature support we must have we can disable that so that they are linked normally and some potential issues can be surfaced at compile-time
       - -D SDL_HIDAPI_LIBUSB_SHARED=OFF
+      - -D SDL_LIBDECOR_SHARED=OFF
       - -D SDL_PIPEWIRE_SHARED=OFF
       - -D SDL_PULSEAUDIO_SHARED=OFF
       - -D SDL_WAYLAND_SHARED=OFF
@@ -202,8 +204,8 @@ modules:
       - -D DAWN_BUILD_PROTOBUF=OFF
       - -D DAWN_BUILD_SAMPLES=OFF
       - -D TINT_BUILD_CMD_TOOLS=OFF
-      - -D TINT_BUILD_TESTS=OFF
       - -D TINT_BUILD_IR_BINARY=OFF
+      - -D TINT_BUILD_TESTS=OFF
 
       # Disable all windowing/graphics support except for Vulkan
       - -D DAWN_ENABLE_DESKTOP_GL=OFF
@@ -275,7 +277,7 @@ modules:
         sha256: cc8c57fdfcd383d2148544dd11939e56ed1a96ba08a81bacdee374b834f4f7e2
         strip-components: 0
       - type: archive
-        url: https://github.com/corrosion-rs/corrosion/archive/refs/tags/v0.5.0.tar.gz
+        url: https://github.com/corrosion-rs/corrosion/archive/refs/tags/v0.6.1.tar.gz
         sha256: bbe0d4a31cef91b890134af82789fb6e8ecc33270472beea9cecb8f2b7b7ed65
         dest: deps/corrosion
     cleanup:
@@ -283,7 +285,7 @@ modules:
       - /lib/lib*.a
       - /lib/cmake
 
-  - name: dev.twilitrealm.Dusklight
+  - name: dev.twilitrealm.dusk
     buildsystem: cmake-ninja
     config-opts:
       # The flatpak-builder cmake generator sets the build to build shared libraries by default. This includes vendored libs like rmlui.
@@ -344,16 +346,16 @@ modules:
       - printf '%s\n' '#!/usr/bin/env sh' 'cd /app' 'exec /app/dusklight "$@"' > /app/bin/dusklight
       - chmod +x /app/bin/dusklight
       # Install Desktop file
-      - install -Dm644 platforms/freedesktop/dusklight.desktop /app/share/applications/dev.twilitrealm.dusklight.desktop
+      - install -Dm644 platforms/freedesktop/dusklight.desktop /app/share/applications/dev.twilitrealm.dusk.desktop
       ## Fix up icon naming
-      - sed -i 's/Icon=dusklight/Icon=dev.twilitrealm.dusklight/' /app/share/applications/dev.twilitrealm.dusklight.desktop
+      - sed -i 's/Icon=dusklight/Icon=dev.twilitrealm.dusk/' /app/share/applications/dev.twilitrealm.dusk.desktop
       # Install Icons
-      - install -Dm644 platforms/freedesktop/16x16/apps/dusklight.png /app/share/icons/hicolor/16x16/apps/dev.twilitrealm.dusklight.png
-      - install -Dm644 platforms/freedesktop/32x32/apps/dusklight.png /app/share/icons/hicolor/32x32/apps/dev.twilitrealm.dusklight.png
-      - install -Dm644 platforms/freedesktop/48x48/apps/dusklight.png /app/share/icons/hicolor/48x48/apps/dev.twilitrealm.dusklight.png
-      - install -Dm644 platforms/freedesktop/64x64/apps/dusklight.png /app/share/icons/hicolor/64x64/apps/dev.twilitrealm.dusklight.png
-      - install -Dm644 platforms/freedesktop/128x128/apps/dusklight.png /app/share/icons/hicolor/128x128/apps/dev.twilitrealm.dusklight.png
-      - install -Dm644 platforms/freedesktop/256x256/apps/dusklight.png /app/share/icons/hicolor/256x256/apps/dev.twilitrealm.dusklight.png
-      - install -Dm644 platforms/freedesktop/512x512/apps/dusklight.png /app/share/icons/hicolor/512x512/apps/dev.twilitrealm.dusklight.png
+      - install -Dm644 platforms/freedesktop/16x16/apps/dusklight.png /app/share/icons/hicolor/16x16/apps/dev.twilitrealm.dusk.png
+      - install -Dm644 platforms/freedesktop/32x32/apps/dusklight.png /app/share/icons/hicolor/32x32/apps/dev.twilitrealm.dusk.png
+      - install -Dm644 platforms/freedesktop/48x48/apps/dusklight.png /app/share/icons/hicolor/48x48/apps/dev.twilitrealm.dusk.png
+      - install -Dm644 platforms/freedesktop/64x64/apps/dusklight.png /app/share/icons/hicolor/64x64/apps/dev.twilitrealm.dusk.png
+      - install -Dm644 platforms/freedesktop/128x128/apps/dusklight.png /app/share/icons/hicolor/128x128/apps/dev.twilitrealm.dusk.png
+      - install -Dm644 platforms/freedesktop/256x256/apps/dusklight.png /app/share/icons/hicolor/256x256/apps/dev.twilitrealm.dusk.png
+      - install -Dm644 platforms/freedesktop/512x512/apps/dusklight.png /app/share/icons/hicolor/512x512/apps/dev.twilitrealm.dusk.png
       # Install metainfo
-      ##- install -Dm644 dev.twilitrealm.dusklight.metainfo.xml /app/share/metainfo/dev.twilitrealm.dusklight.metainfo.xml
+      ##- install -Dm644 dev.twilitrealm.dusk.metainfo.xml /app/share/metainfo/dev.twilitrealm.dusk.metainfo.xml
