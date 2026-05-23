@@ -155,7 +155,6 @@ modules:
       # Various SDL features that we want to ensure are enabled
       - -D SDL_HIDAPI=ON
       - -D SDL_HIDAPI_LIBUSB=ON
-      - -D SDL_LIBDECOR=ON
       - -D SDL_LIBUDEV=ON
       - -D SDL_PIPEWIRE=ON
       - -D SDL_PULSEAUDIO=ON
@@ -163,6 +162,7 @@ modules:
       - -D SDL_RENDER_VULKAN=ON
       - -D SDL_X11=ON # Set this to OFF for a wayland-only build
       - -D SDL_WAYLAND=ON
+      - -D SDL_WAYLAND_LIBDECOR=ON
       - -D SDL_VULKAN=ON
 
       # And shrink the binary size by disabling everything we don't need or don't want to support
@@ -180,10 +180,10 @@ modules:
 
       # SDL uses dlopen() extensively to load various system libraries. For the feature support we must have we can disable that so that they are linked normally and some potential issues can be surfaced at compile-time
       - -D SDL_HIDAPI_LIBUSB_SHARED=OFF
-      - -D SDL_LIBDECOR_SHARED=OFF
       - -D SDL_PIPEWIRE_SHARED=OFF
       - -D SDL_PULSEAUDIO_SHARED=OFF
       - -D SDL_WAYLAND_SHARED=OFF
+      - -D SDL_WAYLAND_LIBDECOR_SHARED=OFF
     sources:
       - type: archive
         url: https://libsdl.org/release/SDL3-3.4.8.tar.gz
@@ -279,7 +279,7 @@ modules:
         strip-components: 0
       - type: archive
         url: https://github.com/corrosion-rs/corrosion/archive/refs/tags/v0.6.1.tar.gz
-        sha256: bbe0d4a31cef91b890134af82789fb6e8ecc33270472beea9cecb8f2b7b7ed65
+        sha256: e9e95b1ee2bad52681f347993fb1a5af5cce458c5ce8a2636c9e476e4babf8e3
         dest: deps/corrosion
     cleanup:
       - /include
