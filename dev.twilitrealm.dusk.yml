@@ -80,7 +80,7 @@ modules:
       - type: git
         url: https://github.com/ReillyBrogan/dusklight
         # tag: v1.2.0
-        commit: 02a5287503c8c867112b71a42db5a1aec1b47973
+        commit: dfacbe24ce042ef8e51da44c4078e43aabfc6650
         # disable-submodules: true
 
       - type: archive
@@ -125,7 +125,7 @@ modules:
       - install -Dm644 platforms/freedesktop/256x256/apps/dev.twilitrealm.dusk.png /app/share/icons/hicolor/256x256/apps/dev.twilitrealm.dusk.png
       - install -Dm644 platforms/freedesktop/512x512/apps/dev.twilitrealm.dusk.png /app/share/icons/hicolor/512x512/apps/dev.twilitrealm.dusk.png
       # Install metainfo
-      ##- install -Dm644 dev.twilitrealm.dusk.metainfo.xml /app/share/metainfo/dev.twilitrealm.dusk.metainfo.xml
+      - install -Dm644 platforms/freedesktop/dev.twilitrealm.dusk.metainfo.xml /app/share/metainfo/dev.twilitrealm.dusk.metainfo.xml
     modules:
     - name: SDL3
       buildsystem: cmake-ninja
