@@ -9,18 +9,18 @@ sdk-extensions:
 command: dusklight
 
 build-options:
-  cflags: "-O2 -ffat-lto-objects -flto=thin -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
-  cxxflags: "-O2 -ffat-lto-objects -flto=thin -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
-  ldflags: "-flto=thin"
+  cflags: "-O2 -ffat-lto-objects -flto=full -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
+  cxxflags: "-O2 -ffat-lto-objects -flto=full -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
+  ldflags: "-flto=full"
   # Note that rustflags isn't supported until flatpak-builder 1.5 which hasn't been released yet. Expect a warning about that during the build
-  rustflags: "-C force-frame-pointers -C lto=thin -C linker-plugin-lto -C embed-bitcode=yes -C opt-level=2 -C codegen-units=16 -C strip=none"
-  prepend-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/llvm22/bin
+  rustflags: "-C force-frame-pointers -C lto=fat -C linker-plugin-lto -C embed-bitcode=yes -C opt-level=2 -C codegen-units=16 -C strip=none"
+  append-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/llvm22/bin
   env:
     CC: clang
     CXX: clang++
     LD: ld.lld
     # TODO: Remove with flatpak-builder 1.5 as this is redundant with setting it with `build-options.rustflags`
-    RUSTFLAGS: "-C force-frame-pointers -C lto=thin -C linker-plugin-lto -C embed-bitcode=yes -C opt-level=2 -C codegen-units=16 -C strip=none"
+    RUSTFLAGS: "-C force-frame-pointers -C lto=fat -C linker-plugin-lto -C embed-bitcode=yes -C opt-level=2 -C codegen-units=16 -C strip=none"
 
 finish-args:
   # Graphical output
@@ -51,6 +51,30 @@ finish-args:
   - --filesystem=xdg-run/app/com.discordapp.Discord:create
 
 modules:
+  # Ensure that the flatpak-builder `--ccache` argument works with the llvm22 extension
+  - name: ccache-shim
+    buildsystem: simple
+    build-commands:
+      - |
+        if command -v ccache &> /dev/null; then
+          ccache --zero-stats
+        fi
+      - |
+        if [[ ":$PATH:" == *":/run/ccache/bin:"* ]]; then
+          mkdir /app/bin
+          ln -s /usr/bin/ccache /app/bin/clang
+          ln -s /usr/bin/ccache /app/bin/clang++
+        fi
+        which clang
+      - |
+        version_output=$(clang --version)
+        echo ${version_output}
+        if [[ "$version_output" != *"version 22.1."* ]]; then
+          exit 1
+        fi
+    cleanup:
+      - /bin
+
   - name: dev.twilitrealm.dusk
     buildsystem: cmake-ninja
     build-options:
@@ -179,6 +203,33 @@ modules:
         - /lib/cmake
         - /lib/pkgconfig
 
+    # TODO: Prevent the example binary from being built. That wouldn't take very long except for the fact that we're using full LTO
+    - name: libnod
+      buildsystem: cmake-ninja
+      config-opts:
+        - -D BUILD_SHARED_LIBS=OFF
+        - -D FETCHCONTENT_FULLY_DISCONNECTED=ON
+        - -D FETCHCONTENT_SOURCE_DIR_CORROSION=deps/corrosion
+
+        # This doesn't currently work. Nod doesn't appear to add the system deps to the linker properties so the build fails when linking dusklight
+        # - -D NOD_USE_CMAKE_COMPRESSION=ON
+      sources:
+        - type: archive
+          url: https://github.com/encounter/nod/archive/refs/tags/v2.0.0-alpha.10.tar.gz
+          sha256: 58bef467548fb2ee09fcfe026ebb2cd0f6369d9e5003ea243ae9afc79b5cb529
+        - type: archive
+          url: https://github.com/encounter/nod/releases/download/v2.0.0-alpha.10/vendored-crates-v2.0.0-alpha.10.tar.zst
+          sha256: e482b6733351add58e711af9880a3ccd066a0eaaac17bf7ffb07306a6925a995
+          strip-components: 0
+        - type: archive
+          url: https://github.com/corrosion-rs/corrosion/archive/refs/tags/v0.6.1.tar.gz
+          sha256: e9e95b1ee2bad52681f347993fb1a5af5cce458c5ce8a2636c9e476e4babf8e3
+          dest: deps/corrosion
+      cleanup:
+        - /include
+        - /lib/lib*.a
+        - /lib/cmake
+
     - name: Dawn
       buildsystem: cmake-ninja
       config-opts:
@@ -260,28 +311,11 @@ modules:
         cleanup:
           - /lib/python*
 
-    - name: libnod
-      buildsystem: cmake-ninja
-      config-opts:
-        - -D BUILD_SHARED_LIBS=OFF
-        - -D FETCHCONTENT_FULLY_DISCONNECTED=ON
-        - -D FETCHCONTENT_SOURCE_DIR_CORROSION=deps/corrosion
-
-        # This doesn't currently work. Nod doesn't appear to add the system deps to the linker properties so the build fails when linking dusklight
-        # - -D NOD_USE_CMAKE_COMPRESSION=ON
-      sources:
-        - type: archive
-          url: https://github.com/encounter/nod/archive/refs/tags/v2.0.0-alpha.10.tar.gz
-          sha256: 58bef467548fb2ee09fcfe026ebb2cd0f6369d9e5003ea243ae9afc79b5cb529
-        - type: archive
-          url: https://github.com/encounter/nod/releases/download/v2.0.0-alpha.10/vendored-crates-v2.0.0-alpha.10.tar.zst
-          sha256: e482b6733351add58e711af9880a3ccd066a0eaaac17bf7ffb07306a6925a995
-          strip-components: 0
-        - type: archive
-          url: https://github.com/corrosion-rs/corrosion/archive/refs/tags/v0.6.1.tar.gz
-          sha256: e9e95b1ee2bad52681f347993fb1a5af5cce458c5ce8a2636c9e476e4babf8e3
-          dest: deps/corrosion
-      cleanup:
-        - /include
-        - /lib/lib*.a
-        - /lib/cmake
+  # See how effective ccache was, if at all
+  - name: ccache-stats
+    buildsystem: simple
+    build-commands:
+      - |
+        if command -v ccache &> /dev/null; then
+          ccache --show-stats
+        fi
