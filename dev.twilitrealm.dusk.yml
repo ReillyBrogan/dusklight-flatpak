@@ -9,18 +9,19 @@ sdk-extensions:
 command: dusklight
 
 build-options:
-  cflags: "-O2 -ffat-lto-objects -flto=full -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
-  cxxflags: "-O2 -ffat-lto-objects -flto=full -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
-  ldflags: "-flto=full"
+  cflags: "-O2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
+  cxxflags: "-O2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
   # Note that rustflags isn't supported until flatpak-builder 1.5 which hasn't been released yet. Expect a warning about that during the build
-  rustflags: "-C force-frame-pointers -C lto=fat -C linker-plugin-lto -C embed-bitcode=yes -C opt-level=2 -C codegen-units=16 -C strip=none"
+  rustflags: "-C force-frame-pointers -C opt-level=2 -C codegen-units=16 -C strip=none"
   append-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/llvm22/bin
   env:
     CC: clang
     CXX: clang++
+    # Every new build is a new directory/checkout and the file inodes will never match
+    CCACHE_INODE_CACHE: "false"
     LD: ld.lld
     # TODO: Remove with flatpak-builder 1.5 as this is redundant with setting it with `build-options.rustflags`
-    RUSTFLAGS: "-C force-frame-pointers -C lto=fat -C linker-plugin-lto -C embed-bitcode=yes -C opt-level=2 -C codegen-units=16 -C strip=none"
+    RUSTFLAGS: "-C force-frame-pointers -C opt-level=2 -C codegen-units=16 -C strip=none"
 
 finish-args:
   # Graphical output
@@ -78,6 +79,11 @@ modules:
   - name: dev.twilitrealm.dusk
     buildsystem: cmake-ninja
     build-options:
+      # Dusklight fails to build with CMAKE_DISABLE_PRECOMPILE_HEADERS=ON so adjust ccache to work with PCH
+      cflags: "-Xclang -fno-pch-timestamp"
+      cxxflags: "-Xclang -fno-pch-timestamp"
+      env:
+        CCACHE_SLOPPINESS: pch_defines,time_macros
       make-args:
         - --verbose
     config-opts:
@@ -193,6 +199,10 @@ modules:
         - -D SDL_PULSEAUDIO_SHARED=OFF
         - -D SDL_WAYLAND_SHARED=OFF
         - -D SDL_WAYLAND_LIBDECOR_SHARED=OFF
+
+        # Without this ccache can't cache anything from this build. I tried CACHE_SLOPPINESS=time_macros as an alternative but it didn't work
+        # Note that there is a slight increase in build times if ccache is disabled or the cache is empty but it's very small
+        - -D CMAKE_DISABLE_PRECOMPILE_HEADERS=ON
       sources:
         - type: archive
           url: https://libsdl.org/release/SDL3-3.4.10.tar.gz
@@ -318,4 +328,6 @@ modules:
       - |
         if command -v ccache &> /dev/null; then
           ccache --show-stats
+          # Enable if you want detailed ccache statistics
+          # ccache -s -vv
         fi
