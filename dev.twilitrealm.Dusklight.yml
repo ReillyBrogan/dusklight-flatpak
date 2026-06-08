@@ -1,4 +1,4 @@
-app-id: dev.twilitrealm.dusk
+app-id: dev.twilitrealm.Dusklight
 runtime: org.freedesktop.Platform
 runtime-version: "25.08"
 sdk: org.freedesktop.Sdk
@@ -76,7 +76,7 @@ modules:
     cleanup:
       - /bin
 
-  - name: dev.twilitrealm.dusk
+  - name: dev.twilitrealm.Dusklight
     buildsystem: cmake-ninja
     build-options:
       # Dusklight fails to build with CMAKE_DISABLE_PRECOMPILE_HEADERS=ON so adjust ccache to work with PCH
@@ -98,64 +98,50 @@ modules:
       - -D AURORA_DAWN_PROVIDER=system
       - -D AURORA_NOD_PROVIDER=system
       - -D FETCHCONTENT_FULLY_DISCONNECTED=ON
-      - -D FETCHCONTENT_SOURCE_DIR_IMGUI=imgui.tar.gz
-      - -D FETCHCONTENT_SOURCE_DIR_RMLUI=rmlui.tar.gz
-      - -D FETCHCONTENT_SOURCE_DIR_TRACY=tracy.tar.gz
-      - -D FETCHCONTENT_SOURCE_DIR_CXXOPTS=cxxopts.tar.gz
-      - -D FETCHCONTENT_SOURCE_DIR_FMT=fmt.tar.gz
-      - -D FETCHCONTENT_SOURCE_DIR_JSON=nlohmann.tar.gz
-      - -D FETCHCONTENT_SOURCE_DIR_XXHASH=xxhash.tar.gz
+      - -D FETCHCONTENT_SOURCE_DIR_IMGUI=fetched/imgui
+      - -D FETCHCONTENT_SOURCE_DIR_RMLUI=fetched/rmlui
+      - -D FETCHCONTENT_SOURCE_DIR_TRACY=fetched/tracy
+      - -D FETCHCONTENT_SOURCE_DIR_CXXOPTS=fetched/cxxopts
+      - -D FETCHCONTENT_SOURCE_DIR_FMT=fetched/fmt
+      - -D FETCHCONTENT_SOURCE_DIR_JSON=fetched/nlohmann
+      - -D FETCHCONTENT_SOURCE_DIR_XXHASH=fetched/xxhash
 
     sources:
       - type: git
         url: https://github.com/ReillyBrogan/dusklight
         # tag: v1.2.0
-        commit: dfacbe24ce042ef8e51da44c4078e43aabfc6650
-        # disable-submodules: true
+        commit: cedda774724c7a555c8b2d0d9dc89f57b9ec6856
 
       - type: archive
         url: https://github.com/ocornut/imgui/archive/refs/tags/v1.91.9b-docking.tar.gz
         sha256: 466fdef9b18de15f0bb6e288e3d00ffa3d82200ec458ce5e4f724a161d9528a5
-        dest: imgui.tar.gz
+        dest: fetched/imgui
       - type: archive
         url: https://github.com/mikke89/RmlUi/archive/f9b8c9e2935d5df2c7dff2c190d3968e99b0c3dc.tar.gz
         sha256: 42b830abc2509a8c07cf02ba3313505de3a4642725654f489402022d8fefdd79
-        dest: rmlui.tar.gz
+        dest: fetched/rmlui
       - type: archive
         url: https://github.com/wolfpld/tracy/archive/a64b9a20294d59421a2f57aeca3c6383d8c48169.tar.gz
         sha256: 24d342b5127d7f659dc3cf94f24347b348cc736f25b17a691fd7f69541937658
-        dest: tracy.tar.gz
+        dest: fetched/tracy
 
       - type: archive
         url: https://github.com/jarro2783/cxxopts/archive/refs/tags/v3.3.1.tar.gz
         sha256: 3bfc70542c521d4b55a46429d808178916a579b28d048bd8c727ee76c39e2072
-        dest: cxxopts.tar.gz
+        dest: fetched/cxxopts
       - type: archive
         url: https://github.com/fmtlib/fmt/archive/refs/tags/11.2.0.tar.gz
         sha256: bc23066d87ab3168f27cef3e97d545fa63314f5c79df5ea444d41d56f962c6af
-        dest: fmt.tar.gz
+        dest: fetched/fmt
       - type: archive
         url: https://github.com/nlohmann/json/archive/refs/tags/v3.12.0.tar.gz
         sha256: 4b92eb0c06d10683f7447ce9406cb97cd4b453be18d7279320f7b2f025c10187
-        dest: nlohmann.tar.gz
+        dest: fetched/nlohmann
       - type: archive
         url: https://github.com/Cyan4973/xxHash/archive/refs/tags/v0.8.3.tar.gz
         sha256: aae608dfe8213dfd05d909a57718ef82f30722c392344583d3f39050c7f29a80
-        dest: xxhash.tar.gz
+        dest: fetched/xxhash
 
-    post-install:
-      # Install Desktop file
-      - install -Dm644 platforms/freedesktop/dev.twilitrealm.dusk.desktop -t /app/share/applications/
-      # Install Icons
-      - install -Dm644 platforms/freedesktop/16x16/apps/dev.twilitrealm.dusk.png /app/share/icons/hicolor/16x16/apps/dev.twilitrealm.dusk.png
-      - install -Dm644 platforms/freedesktop/32x32/apps/dev.twilitrealm.dusk.png /app/share/icons/hicolor/32x32/apps/dev.twilitrealm.dusk.png
-      - install -Dm644 platforms/freedesktop/48x48/apps/dev.twilitrealm.dusk.png /app/share/icons/hicolor/48x48/apps/dev.twilitrealm.dusk.png
-      - install -Dm644 platforms/freedesktop/64x64/apps/dev.twilitrealm.dusk.png /app/share/icons/hicolor/64x64/apps/dev.twilitrealm.dusk.png
-      - install -Dm644 platforms/freedesktop/128x128/apps/dev.twilitrealm.dusk.png /app/share/icons/hicolor/128x128/apps/dev.twilitrealm.dusk.png
-      - install -Dm644 platforms/freedesktop/256x256/apps/dev.twilitrealm.dusk.png /app/share/icons/hicolor/256x256/apps/dev.twilitrealm.dusk.png
-      - install -Dm644 platforms/freedesktop/512x512/apps/dev.twilitrealm.dusk.png /app/share/icons/hicolor/512x512/apps/dev.twilitrealm.dusk.png
-      # Install metainfo
-      - install -Dm644 platforms/freedesktop/dev.twilitrealm.dusk.metainfo.xml /app/share/metainfo/dev.twilitrealm.dusk.metainfo.xml
     modules:
     - name: SDL3
       buildsystem: cmake-ninja
@@ -270,7 +256,7 @@ modules:
         - type: git
           url: https://dawn.googlesource.com/dawn
           # tag: chromium/7850
-          commit: 9aa45f938d4b36626722bbfdc2f18447179337e6
+          commit: 13abc3bc8ea2d3c2050f9e77a12d012108ceee24
           disable-submodules: true
 
       # Submodules
@@ -282,12 +268,12 @@ modules:
         - type: git
           url: https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Headers
           dest: "third_party/spirv-headers/src"
-          commit: 8c5559c134abcf432ec59db842404087b9906c1a
+          commit: 1e770e7de8373a8dd49f23416cf7ca4001d01040
           disable-submodules: true
         - type: git
           url: https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Tools
           dest: "third_party/spirv-tools/src"
-          commit: bf3ad6e795df95455c206452ce78a6c0277a5dd3
+          commit: b38c4f83024546d4000b2db8e2294cf81b7f26e0
           disable-submodules: true
         - type: git
           url: https://chromium.googlesource.com/external/github.com/KhronosGroup/Vulkan-Headers
